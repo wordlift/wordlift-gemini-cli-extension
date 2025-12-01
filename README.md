@@ -2,6 +2,16 @@
 
 This extension allows you to interact with WordLift Knowledge Graphs directly from Gemini CLI with full CRUD (Create, Read, Update, Delete) operations for entities.
 
+## Quick Start
+
+Install the extension directly from GitHub:
+
+```bash
+gemini extensions install https://github.com/wordlift/wordlift-gemini-cli-extension.git
+```
+
+Then follow the [detailed installation guide](INSTALL.md) to configure your environment.
+
 ## Features
 
 ### Entity Management Tools
