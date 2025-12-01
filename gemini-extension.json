@@ -1,0 +1,16 @@
+{
+    "name": "wordlift-gemini-extension",
+    "version": "1.0.0",
+    "mcpServers": {
+        "wordlift": {
+            "command": "${extensionPath}/venv/bin/python",
+            "args": [
+                "${extensionPath}/server.py"
+            ],
+            "cwd": "${extensionPath}",
+            "env": {
+                "PYTHONUNBUFFERED": "1"
+            }
+        }
+    }
+}
