@@ -20,3 +20,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - RDF validation using rdflib
 - Comprehensive error handling and reporting
 - Full documentation with usage examples
+- Automated installation script (`install.sh`) for seamless setup
+- `.env.example` template for easy configuration
+- Separate installation and development documentation

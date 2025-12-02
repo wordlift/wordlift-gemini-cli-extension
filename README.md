@@ -2,7 +2,7 @@
 
 This extension allows you to interact with WordLift Knowledge Graphs directly from Gemini CLI with full CRUD (Create, Read, Update, Delete) operations for entities.
 
-## Quick Start
+## Installation
 
 Install the extension directly from GitHub:
 
@@ -10,7 +10,30 @@ Install the extension directly from GitHub:
 gemini extensions install https://github.com/wordlift/wordlift-gemini-cli-extension.git
 ```
 
-Then follow the [detailed installation guide](INSTALL.md) to configure your environment.
+The installation script will automatically set up the Python environment and dependencies.
+
+### Configuration
+
+After installation, configure the extension with your WordLift credentials:
+
+1. Navigate to the extension directory:
+   ```bash
+   cd ~/.gemini/extensions/wordlift-gemini-cli-extension
+   ```
+
+2. Create a `.env` file with your credentials:
+   ```env
+   WORDLIFT_API_KEY=your_api_key_here
+   WORDLIFT_BASE_URI=https://data.wordlift.io/your_dataset_id
+   WORDLIFT_API_ENDPOINT=https://api.wordlift.io
+   ```
+
+3. Replace `your_api_key_here` with your actual WordLift API key
+4. Replace `your_dataset_id` with your WordLift dataset identifier
+
+**Get your credentials:**
+- API Key: Available in your WordLift account settings
+- Dataset URI: Find this in your WordLift dashboard
 
 ## Features
 
@@ -35,33 +58,6 @@ All entity operations support multiple RDF formats:
 - Python 3.10+
 - WordLift API Key
 - WordLift Dataset URI
-
-## Installation
-
-1.  Navigate to the extension directory:
-    ```bash
-    cd wordlift-gemini-cli-extension
-    ```
-
-2.  Install Python dependencies:
-    ```bash
-    python3 -m venv venv
-    source venv/bin/activate
-    pip install -r requirements.txt
-    ```
-
-3.  Configure Environment Variables:
-    Create a `.env` file in this directory with your WordLift credentials:
-    ```env
-    WORDLIFT_API_KEY=your_api_key_here
-    WORDLIFT_BASE_URI=https://data.wordlift.io/wl1505540
-    WORDLIFT_API_ENDPOINT=https://api.wordlift.io
-    ```
-
-4.  Link the extension to Gemini CLI:
-    ```bash
-    gemini extensions link .
-    ```
 
 ## Usage Examples
 
@@ -190,6 +186,36 @@ pip install -r requirements.txt
 
 ### RDF Parsing Errors
 Validate your RDF syntax before uploading. The extension will report the specific line where parsing failed.
+
+## Development Setup
+
+If you want to contribute to this extension or modify it for your own use:
+
+1. Clone the repository:
+   ```bash
+   git clone https://github.com/wordlift/wordlift-gemini-cli-extension.git
+   cd wordlift-gemini-cli-extension
+   ```
+
+2. Run the installation script:
+   ```bash
+   ./install.sh
+   ```
+
+3. Create your `.env` file with credentials (see Configuration section above)
+
+4. Link the extension to Gemini CLI for testing:
+   ```bash
+   gemini extensions link .
+   ```
+
+5. Make your changes and test locally with Gemini CLI
+
+6. When ready, unlink and reinstall from your fork:
+   ```bash
+   gemini extensions unlink wordlift-gemini-extension
+   gemini extensions install https://github.com/your-username/wordlift-gemini-cli-extension.git
+   ```
 
 ## Support
 

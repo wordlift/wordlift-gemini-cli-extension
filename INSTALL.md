@@ -27,28 +27,15 @@ gemini extensions link .
 
 ## Post-Installation Setup
 
-### 1. Create Virtual Environment
+### 1. Automated Setup
 
-Navigate to the extension directory and set up Python dependencies:
+The extension includes an installation script that runs automatically when you install via `gemini extensions install`. It will:
+1. Create a Python virtual environment
+2. Install all required dependencies
 
+If you need to run it manually (e.g. after cloning locally):
 ```bash
-# Find where the extension was installed
-gemini extensions list
-
-# Navigate to the extension directory
-cd ~/.gemini/extensions/wordlift-gemini-cli-extension  # or wherever it was installed
-
-# Create virtual environment
-python3 -m venv venv
-
-# Activate virtual environment
-source venv/bin/activate
-
-# Install dependencies
-pip install -r requirements.txt
-
-# Deactivate when done
-deactivate
+./install.sh
 ```
 
 ### 2. Configure Environment Variables

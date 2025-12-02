@@ -1,6 +1,18 @@
 {
     "name": "wordlift-gemini-extension",
     "version": "1.0.0",
+    "description": "Manage WordLift Knowledge Graphs directly from Gemini CLI with full CRUD operations",
+    "publisher": "WordLift",
+    "repository": "https://github.com/wordlift/wordlift-gemini-cli-extension",
+    "tags": [
+        "wordlift",
+        "knowledge-graph",
+        "seo",
+        "mcp",
+        "rdf",
+        "linked-data"
+    ],
+    "installScript": "./install.sh",
     "mcpServers": {
         "wordlift": {
             "command": "${extensionPath}/venv/bin/python",
