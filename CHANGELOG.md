@@ -5,6 +5,27 @@ All notable changes to the WordLift Gemini CLI Extension will be documented in t
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.1.0] - 2025-12-18
+
+### Added
+- **Knowledge Graph Builder Suite**: Transform webpages into structured Data.
+- **Improved Entity Building**:
+  - `build_product`: Create Google-friendly Products with GS1 Digital Link IRIs.
+  - `build_organization` & `build_webpage`: Proper slug-based ID generation.
+- **Validation & Quality Control**:
+  - `validate_entity`: SHACL-based validation for Products, Organizations, and WebPages.
+  - `markup_validator`: Structural JSON-LD validation.
+- **Sync & Orchestration**:
+  - `sync_kg`: Multi-mode sync tool (Batch or Incremental PATCH).
+  - `import_from_sitemap` & `import_from_urls`: Unified WordLift Sitemap Import API integration.
+- **Internal Core Scripts**:
+  - `id_generator.py`: GTIN-14 normalization and GS1 Digital Link generation.
+  - `entity_reuse.py`: Prevents duplicates by reusing existing entities from the KG.
+  - `wordlift_client.py`: High-level Python wrapper for both REST and GraphQL APIs.
+- **Documentation**:
+  - Extensive `references/` folder with technical guides and patterns.
+  - `dry_run_test.py` for offline verification of core logic.
+
 ## [1.0.0] - 2025-12-01
 
 ### Added

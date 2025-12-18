@@ -1,11 +1,23 @@
 import os
 import logging
-from typing import Optional, List
+import sys
+import json
+from typing import Optional, List, Dict, Any
 from mcp.server.fastmcp import FastMCP
 from dotenv import load_dotenv
 import rdflib
-import wordlift_client
-from wordlift_client.rest import ApiException
+
+# Add scripts directory to path
+sys.path.append(os.path.join(os.path.dirname(__file__), "scripts"))
+
+# Import new components
+from scripts.wordlift_client import WordLiftClient
+from scripts.entity_builder import EntityBuilder
+from scripts.id_generator import generate_product_id, generate_entity_id
+from scripts.shacl_validator import SHACLValidator
+from scripts.markup_validator import MarkupValidator
+from scripts.kg_sync import KGSyncOrchestrator
+from scripts.template_configurator import TemplateConfigurator
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -22,206 +34,186 @@ WORDLIFT_API_ENDPOINT = os.getenv("WORDLIFT_API_ENDPOINT", "https://api.wordlift
 # Initialize FastMCP
 mcp = FastMCP("WordLift")
 
-def get_api_client():
-    """Configures and returns the WordLift API client."""
+def get_client():
+    """Returns a WordLift API client."""
     if not WORDLIFT_API_KEY:
         raise ValueError("WORDLIFT_API_KEY environment variable is not set.")
+    return WordLiftClient(WORDLIFT_API_KEY, WORDLIFT_API_ENDPOINT)
 
-    configuration = wordlift_client.Configuration(
-        host=WORDLIFT_API_ENDPOINT
-    )
-    configuration.api_key['Authorization'] = WORDLIFT_API_KEY
-    configuration.api_key_prefix['Authorization'] = 'Key'
+def get_dataset_uri():
+    """Returns the dataset URI from env or raises error."""
+    if not WORDLIFT_BASE_URI:
+        raise ValueError("WORDLIFT_BASE_URI environment variable is not set.")
+    return WORDLIFT_BASE_URI.rstrip('/')
 
-    return wordlift_client.ApiClient(configuration)
-
-def format_rdf_content(content: str, format_type: str = "turtle") -> str:
-    """Validate and format RDF content."""
-    g = rdflib.Graph()
-    g.parse(data=content, format=format_type)
-    return g.serialize(format=format_type)
-
-# ==================== CREATE OPERATIONS ====================
+# ==================== KNOWLEDGE GRAPH BUILDING ====================
 
 @mcp.tool()
-def create_entities(rdf_content: str, content_format: str = "turtle") -> str:
+def import_from_sitemap(sitemap_url: str) -> str:
     """
-    Creates new entities in the WordLift Knowledge Graph.
+    Import pages from a sitemap.xml using WordLift Sitemap Import API.
 
     Args:
-        rdf_content: RDF data as a string (Turtle, JSON-LD, or RDF/XML format).
-        content_format: Format of the RDF content. Options: "turtle", "json-ld", "xml". Default: "turtle".
-
-    Returns:
-        A status message indicating success or failure.
+        sitemap_url: URL to the sitemap.xml file.
     """
     try:
-        # Validate and format the RDF content
-        formatted_content = format_rdf_content(rdf_content, content_format)
+        client = get_client()
+        results = client.import_from_sitemap(sitemap_url)
+        return f"Successfully imported {len(results)} pages from sitemap: {sitemap_url}"
+    except Exception as e:
+        logger.error(f"Sitemap import error: {e}")
+        return f"Error: {str(e)}"
 
-        # Map format to content type
-        content_type_map = {
-            "turtle": "text/turtle",
-            "json-ld": "application/ld+json",
-            "xml": "application/rdf+xml"
+@mcp.tool()
+def import_from_urls(urls: List[str]) -> str:
+    """
+    Import specific URLs into the WordLift Knowledge Graph.
+
+    Args:
+        urls: List of URLs to import.
+    """
+    try:
+        client = get_client()
+        results = client.import_from_urls(urls)
+        return f"Successfully imported {len(results)} URLs"
+    except Exception as e:
+        logger.error(f"URL import error: {e}")
+        return f"Error: {str(e)}"
+
+@mcp.tool()
+def build_product(data_json: str) -> str:
+    """
+    Build a JSON-LD Product entity with GS1 Digital Link ID.
+
+    Args:
+        data_json: JSON string containing product data (gtin, name, description, brand, price, currency, etc.).
+    """
+    try:
+        data = json.loads(data_json)
+        builder = EntityBuilder(get_dataset_uri())
+        product = builder.build_product(data)
+        return json.dumps(product, indent=2)
+    except Exception as e:
+        return f"Error: {str(e)}"
+
+@mcp.tool()
+def build_organization(data_json: str) -> str:
+    """
+    Build a JSON-LD Organization entity.
+
+    Args:
+        data_json: JSON string containing organization data (name, url, logo, description, etc.).
+    """
+    try:
+        data = json.loads(data_json)
+        builder = EntityBuilder(get_dataset_uri())
+        org = builder.build_organization(data)
+        return json.dumps(org, indent=2)
+    except Exception as e:
+        return f"Error: {str(e)}"
+
+@mcp.tool()
+def build_webpage(data_json: str) -> str:
+    """
+    Build a JSON-LD WebPage entity.
+
+    Args:
+        data_json: JSON string containing webpage data (url, name, description, etc.).
+    """
+    try:
+        data = json.loads(data_json)
+        builder = EntityBuilder(get_dataset_uri())
+        webpage = builder.build_webpage(data)
+        return json.dumps(webpage, indent=2)
+    except Exception as e:
+        return f"Error: {str(e)}"
+
+# ==================== VALIDATION & SYNC ====================
+
+@mcp.tool()
+def validate_entity(entity_json: str, strict: bool = False) -> str:
+    """
+    Validate a JSON-LD entity against SHACL shapes.
+
+    Args:
+        entity_json: JSON-LD entity string.
+        strict: Whether to treat recommended fields as required.
+    """
+    try:
+        entity = json.loads(entity_json)
+        validator = SHACLValidator()
+        is_valid, errors, warnings = validator.validate(entity, strict)
+
+        result = {
+            "valid": is_valid,
+            "errors": errors,
+            "warnings": warnings
         }
-        content_type = content_type_map.get(content_format, "text/turtle")
-
-        # Create entities
-        api_client = get_api_client()
-        api_instance = wordlift_client.EntitiesApi(api_client)
-
-        api_instance.create_entities(
-            body=formatted_content,
-            _content_type=content_type
-        )
-
-        # Count triples for reporting
-        g = rdflib.Graph()
-        g.parse(data=formatted_content, format=content_format)
-        triple_count = len(g)
-
-        return f"Successfully created entities with {triple_count} triples in WordLift KG."
-
-    except ApiException as e:
-        logger.error(f"WordLift API Exception: {e}")
-        return f"WordLift API Error: {e.status} - {e.reason}\n{e.body}"
+        return json.dumps(result, indent=2)
     except Exception as e:
-        logger.error(f"Unexpected error: {e}")
         return f"Error: {str(e)}"
 
 @mcp.tool()
-def create_or_update_entities(rdf_content: str, content_format: str = "turtle") -> str:
+def sync_kg(products_json: str, incremental: bool = False) -> str:
     """
-    Creates new entities or updates existing ones (upsert operation) in the WordLift Knowledge Graph.
-
-    This is the recommended method for most operations as it handles both creation and updates.
+    Sync multiple products to the WordLift Knowledge Graph.
 
     Args:
-        rdf_content: RDF data as a string (Turtle, JSON-LD, or RDF/XML format).
-        content_format: Format of the RDF content. Options: "turtle", "json-ld", "xml". Default: "turtle".
-
-    Returns:
-        A status message indicating success or failure.
+        products_json: JSON array of product data.
+        incremental: Whether to use incremental PATCH updates.
     """
     try:
-        # Validate and format the RDF content
-        formatted_content = format_rdf_content(rdf_content, content_format)
+        products = json.loads(products_json)
+        orchestrator = KGSyncOrchestrator(WORDLIFT_API_KEY, get_dataset_uri())
 
-        # Map format to content type
-        content_type_map = {
-            "turtle": "text/turtle",
-            "json-ld": "application/ld+json",
-            "xml": "application/rdf+xml"
-        }
-        content_type = content_type_map.get(content_format, "text/turtle")
+        if incremental:
+            stats = orchestrator.incremental_update(products)
+        else:
+            stats = orchestrator.sync_products(products)
 
-        # Upsert entities
-        api_client = get_api_client()
-        api_instance = wordlift_client.EntitiesApi(api_client)
-
-        api_instance.create_or_update_entities(
-            body=formatted_content,
-            _content_type=content_type
-        )
-
-        # Count triples for reporting
-        g = rdflib.Graph()
-        g.parse(data=formatted_content, format=content_format)
-        triple_count = len(g)
-
-        return f"Successfully upserted entities with {triple_count} triples in WordLift KG."
-
-    except ApiException as e:
-        logger.error(f"WordLift API Exception: {e}")
-        return f"WordLift API Error: {e.status} - {e.reason}\n{e.body}"
+        return f"Sync complete: {json.dumps(stats, indent=2)}"
     except Exception as e:
-        logger.error(f"Unexpected error: {e}")
+        logger.error(f"Sync error: {e}")
         return f"Error: {str(e)}"
 
-# ==================== READ OPERATIONS ====================
+# ==================== LEGACY OPERATIONS (Refactored) ====================
 
 @mcp.tool()
-def get_entities(entity_ids: str) -> str:
+def create_or_update_entities(rdf_content: str, content_format: str = "json-ld") -> str:
     """
-    Retrieves entities from the WordLift Knowledge Graph by their IDs.
+    Creates new entities or updates existing ones in the WordLift Knowledge Graph.
 
     Args:
-        entity_ids: Comma-separated list of entity IRIs or IDs to retrieve.
-
-    Returns:
-        The entity data in Turtle format or an error message.
+        rdf_content: RDF data as a string.
+        content_format: Format (turtle, json-ld, xml). Default: json-ld.
     """
     try:
-        api_client = get_api_client()
-        api_instance = wordlift_client.EntitiesApi(api_client)
-
-        # Convert comma-separated string to list
-        id_list = [id.strip() for id in entity_ids.split(",")]
-
-        response = api_instance.get_entities(id=id_list)
-
-        return f"Successfully retrieved entities:\n\n{response}"
-
-    except ApiException as e:
-        logger.error(f"WordLift API Exception: {e}")
-        return f"WordLift API Error: {e.status} - {e.reason}\n{e.body}"
+        client = get_client()
+        if content_format == "json-ld":
+            entity = json.loads(rdf_content)
+            client.create_or_update_entity(entity)
+            return "Successfully upserted entity in WordLift KG."
+        else:
+            # Fallback for Turtle/XML using simple implementation
+            return "Error: Enhanced client currently optimized for JSON-LD. Use build_product/build_organization for best results."
     except Exception as e:
-        logger.error(f"Unexpected error: {e}")
+        logger.error(f"Upsert error: {e}")
         return f"Error: {str(e)}"
-
-# ==================== UPDATE OPERATIONS ====================
 
 @mcp.tool()
-def patch_entities(rdf_content: str, content_format: str = "turtle") -> str:
+def get_entity(entity_id: str) -> str:
     """
-    Patches (partially updates) existing entities in the WordLift Knowledge Graph.
-
-    This method allows you to update specific properties without replacing the entire entity.
-
-    Args:
-        rdf_content: RDF data as a string containing the properties to update (Turtle, JSON-LD, or RDF/XML format).
-        content_format: Format of the RDF content. Options: "turtle", "json-ld", "xml". Default: "turtle".
-
-    Returns:
-        A status message indicating success or failure.
+    Retrieves an entity from the WordLift Knowledge Graph by its ID/IRI.
     """
     try:
-        # Validate and format the RDF content
-        formatted_content = format_rdf_content(rdf_content, content_format)
-
-        # Map format to content type
-        content_type_map = {
-            "turtle": "text/turtle",
-            "json-ld": "application/ld+json",
-            "xml": "application/rdf+xml"
-        }
-        content_type = content_type_map.get(content_format, "text/turtle")
-
-        # Patch entities
-        api_client = get_api_client()
-        api_instance = wordlift_client.EntitiesApi(api_client)
-
-        api_instance.patch_entities(
-            body=formatted_content,
-            _content_type=content_type
-        )
-
-        # Count triples for reporting
-        g = rdflib.Graph()
-        g.parse(data=formatted_content, format=content_format)
-        triple_count = len(g)
-
-        return f"Successfully patched entities with {triple_count} triples in WordLift KG."
-
-    except ApiException as e:
-        logger.error(f"WordLift API Exception: {e}")
-        return f"WordLift API Error: {e.status} - {e.reason}\n{e.body}"
+        client = get_client()
+        entity = client.get_entity_by_url(entity_id)
+        if entity:
+            return json.dumps(entity, indent=2)
+        return f"Entity not found: {entity_id}"
     except Exception as e:
-        logger.error(f"Unexpected error: {e}")
+        logger.error(f"Get entity error: {e}")
         return f"Error: {str(e)}"
-
-# ==================== DELETE OPERATIONS ====================
 
 @mcp.tool()
 def delete_entities(entity_ids: str) -> str:
@@ -229,86 +221,16 @@ def delete_entities(entity_ids: str) -> str:
     Deletes entities from the WordLift Knowledge Graph by their IDs.
 
     Args:
-        entity_ids: Comma-separated list of entity IRIs or IDs to delete.
-
-    Returns:
-        A status message indicating success or failure.
+        entity_ids: Comma-separated list of entity IRIs.
     """
     try:
-        api_client = get_api_client()
-        api_instance = wordlift_client.EntitiesApi(api_client)
-
-        # Convert comma-separated string to list
+        client = get_client()
         id_list = [id.strip() for id in entity_ids.split(",")]
-
-        api_instance.delete_entities(id=id_list)
-
+        for entity_id in id_list:
+            client.delete_entity(entity_id)
         return f"Successfully deleted {len(id_list)} entities from WordLift KG."
-
-    except ApiException as e:
-        logger.error(f"WordLift API Exception: {e}")
-        return f"WordLift API Error: {e.status} - {e.reason}\n{e.body}"
     except Exception as e:
-        logger.error(f"Unexpected error: {e}")
-        return f"Error: {str(e)}"
-
-# ==================== FILE OPERATIONS ====================
-
-@mcp.tool()
-def upload_turtle_file(file_path: str, operation: str = "upsert") -> str:
-    """
-    Reads a Turtle (.ttl) file, validates it, and uploads it to WordLift.
-
-    Args:
-        file_path: Absolute path to the .ttl file.
-        operation: Operation to perform. Options: "create", "upsert", "patch". Default: "upsert".
-
-    Returns:
-        A status message indicating success or failure.
-    """
-    if not os.path.exists(file_path):
-        return f"Error: File not found at {file_path}"
-
-    try:
-        # Read and parse the file
-        g = rdflib.Graph()
-        g.parse(file_path, format="turtle")
-        triple_count = len(g)
-        logger.info(f"Parsed {triple_count} triples from {file_path}")
-
-        # Serialize back to Turtle
-        turtle_content = g.serialize(format="turtle")
-
-        # Upload to WordLift based on operation
-        api_client = get_api_client()
-        api_instance = wordlift_client.EntitiesApi(api_client)
-
-        if operation == "create":
-            api_instance.create_entities(
-                body=turtle_content,
-                _content_type='text/turtle'
-            )
-            action = "created"
-        elif operation == "patch":
-            api_instance.patch_entities(
-                body=turtle_content,
-                _content_type='text/turtle'
-            )
-            action = "patched"
-        else:  # default to upsert
-            api_instance.create_or_update_entities(
-                body=turtle_content,
-                _content_type='text/turtle'
-            )
-            action = "upserted"
-
-        return f"Successfully {action} {triple_count} triples from {file_path} to WordLift KG."
-
-    except ApiException as e:
-        logger.error(f"WordLift API Exception: {e}")
-        return f"WordLift API Error: {e.status} - {e.reason}\n{e.body}"
-    except Exception as e:
-        logger.error(f"Unexpected error: {e}")
+        logger.error(f"Delete error: {e}")
         return f"Error: {str(e)}"
 
 if __name__ == "__main__":

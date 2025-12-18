@@ -1,59 +1,43 @@
-# Release v1.0.0 - Initial Release
+# Release v1.1.0 - Knowledge Graph Builder
 
-## 🎉 First Public Release
+## 🚀 Knowledge Graph Builder Suite
 
-This is the first public release of the WordLift Gemini CLI Extension!
+This release transforms the WordLift Gemini CLI Extension into a powerful Knowledge Graph builder, enabling automated data pipelines from webpages to your WordLift KG.
 
-## ✨ Features
+## ✨ New Features
 
-Complete CRUD operations for WordLift Knowledge Graph entities:
+### 📦 Webpage-to-Data Pipeline
+- **Sitemap Import**: Jumpstart your KG by importing all pages from a sitemap.xml.
+- **Entity Reuse**: Automatically detects and reuses existing brands, authors, and publishers to prevent duplicates.
+- **GS1 Digital Link**: Native support for GS1 standards, generating deterministic, dereferenceable IRIs for product catalogs.
 
-- **`create_entities`** - Create new entities in your Knowledge Graph
-- **`create_or_update_entities`** - Upsert entities (create new or update existing) - **recommended**
-- **`get_entities`** - Retrieve entities by their IDs
-- **`patch_entities`** - Partially update specific properties of existing entities
-- **`delete_entities`** - Delete entities by their IDs
-- **`upload_turtle_file`** - Bulk upload/update entities from Turtle files
+### ✅ Validation & Sync
+- **SHACL Validation**: Ensure your entities meet strict schema.org requirements (e.g., GTIN-14 validation) before syncing.
+- **Incremental PATCH Sync**: Update large catalogs efficiently by only sending changes (using JSON Patch).
+- **Batch Operations**: High-performance batch creation and updates.
 
-## 🔧 Technical Details
+### � Technical Documentation
+- **Technical References**: A new `references/` directory containing detailed guides on workflows, GraphQL patterns, and automation scheduling.
+- **Dry Run Testing**: New `scripts/dry_run_test.py` to verify your data logic offline.
 
-- Multi-format RDF support (Turtle, JSON-LD, RDF/XML)
-- Built with FastMCP (Model Context Protocol)
-- Official WordLift Python SDK integration
-- RDF validation using rdflib
-- Comprehensive error handling
+## 🔧 Internal Improvements
+- New high-level `WordLiftClient` for unified API interaction.
+- Enhanced `EntityBuilder` with built-in entity reuse logic.
+- Modular architecture with standalone scripts in `scripts/`.
 
-## 📦 Installation
+## 📦 Installation & Update
 
-Install directly from GitHub:
-
-```bash
-gemini extensions install https://github.com/wordlift/wordlift-gemini-cli-extension.git
-```
-
-Or install this specific release:
+Update your extension directly from GitHub:
 
 ```bash
-gemini extensions install https://github.com/wordlift/wordlift-gemini-cli-extension.git --ref=v1.0.0
+gemini extensions update https://github.com/wordlift/wordlift-gemini-cli-extension.git
 ```
-
-For detailed setup instructions, see [INSTALL.md](https://github.com/wordlift/wordlift-gemini-cli-extension/blob/main/INSTALL.md).
 
 ## 📚 Documentation
+- [Workflows](references/workflows.md) - Common KG building patterns
+- [GraphQL Patterns](references/graphql_queries.md) - Querying your imported data
+- [Validation Guide](references/entity-reuse-and-shacl-validation.md) - Ensuring data quality
 
-- [README.md](https://github.com/wordlift/wordlift-gemini-cli-extension/blob/main/README.md) - Full documentation
-- [INSTALL.md](https://github.com/wordlift/wordlift-gemini-cli-extension/blob/main/INSTALL.md) - Installation guide
-- [CHANGELOG.md](https://github.com/wordlift/wordlift-gemini-cli-extension/blob/main/CHANGELOG.md) - Version history
-
-## 🔐 Configuration
-
-This extension requires:
-- WordLift API Key
-- Python 3.10+
-- Virtual environment with dependencies from `requirements.txt`
-
-See installation guide for complete setup instructions.
-
-## 📄 License
-
-MIT License - see [LICENSE](https://github.com/wordlift/wordlift-gemini-cli-extension/blob/main/LICENSE)
+## 🔐 Environmental Variables
+Update your `.env` to include:
+- `WORDLIFT_BASE_URI`: Your base dataset IRI (e.g., `https://data.wordlift.io/wl123`)

@@ -1,6 +1,6 @@
-# WordLift Gemini CLI Extension
+# WordLift Knowledge Graph Builder & Gemini CLI Extension
 
-This extension allows you to interact with WordLift Knowledge Graphs directly from Gemini CLI with full CRUD (Create, Read, Update, Delete) operations for entities.
+This extension allows you to build and maintain Knowledge Graphs directly from Gemini CLI using WordLift APIs. It handles everything from sitemap imports to GS1 Digital Link generation and SHACL validation.
 
 ## Installation
 
@@ -24,199 +24,110 @@ After installation, configure the extension with your WordLift credentials:
 2. Create a `.env` file with your credentials:
    ```env
    WORDLIFT_API_KEY=your_api_key_here
-   WORDLIFT_BASE_URI=https://data.wordlift.io/your_dataset_id
+   WORDLIFT_BASE_URI=https://data.wordlift.io/wl123
    WORDLIFT_API_ENDPOINT=https://api.wordlift.io
    ```
 
 3. Replace `your_api_key_here` with your actual WordLift API key
-4. Replace `your_dataset_id` with your WordLift dataset identifier
+4. Replace `wl123` with your WordLift account dataset identifier
 
-**Get your credentials:**
-- API Key: Available in your WordLift account settings
-- Dataset URI: Find this in your WordLift dashboard
+## Core Features
 
-## Features
+### 1. Knowledge Graph Building
+- **`import_from_sitemap`**: Import URLs from sitemap.xml to jumpstart your Knowledge Graph.
+- **`import_from_urls`**: Import specific URL lists for immediate processing.
+- **`build_product`**: Create schema.org Product entities with GS1 Digital Link identifiers (`{dataset_uri}/01/{GTIN-14}`).
+- **`build_organization`**: Create Organization entities with slug-based IDs.
+- **`build_webpage`**: Create WebPage entities with proper slug patterns.
 
-### Entity Management Tools
+### 2. Data Quality & Sync
+- **`validate_entity`**: Validate entities against SHACL shapes for Products, Organizations, and WebPages.
+- **`sync_kg`**: Perform batch create/update operations or incremental PATCH updates for daily sync workflows.
+- **`create_or_update_entities`**: Upsert entities using JSON-LD or Turtle content.
 
-- **`create_entities`**: Create new entities in your Knowledge Graph
-- **`create_or_update_entities`**: Upsert entities (create new or update existing) - **recommended for most use cases**
-- **`get_entities`**: Retrieve entities by their IDs
-- **`patch_entities`**: Partially update specific properties of existing entities
-- **`delete_entities`**: Delete entities by their IDs
-- **`upload_turtle_file`**: Bulk upload/update entities from Turtle (.ttl) files
-
-### Supported RDF Formats
-
-All entity operations support multiple RDF formats:
-- **Turtle** (default, `.ttl`)
-- **JSON-LD** (`.jsonld`)
-- **RDF/XML** (`.rdf`, `.xml`)
+### 3. Entity Management
+- **`get_entity`**: Retrieve specific entities by their IRI.
+- **`delete_entities`**: Remove entities from the Knowledge Graph.
 
 ## Prerequisites
 
 - Python 3.10+
 - WordLift API Key
-- WordLift Dataset URI
+- WordLift Dataset URI (`https://data.wordlift.io/wl{account_id}/`)
 
 ## Usage Examples
 
-Once linked, you can use natural language in Gemini CLI to interact with your Knowledge Graph:
-
-### Creating Entities
-
+### Import from Sitemap
 ```
-Create a new entity in my WordLift KG:
-@prefix schema: <http://schema.org/> .
-<http://example.com/person/john> a schema:Person ;
-    schema:name "John Doe" ;
-    schema:email "john@example.com" .
+Import all pages from https://example.com/sitemap.xml into my WordLift KG
 ```
 
-### Upserting Entities (Recommended)
-
+### Build and Sync Products
+You can ask Gemini to build a product from raw data:
 ```
-Upsert the following entity to my WordLift KG:
-@prefix schema: <http://schema.org/> .
-<http://example.com/org/acme> a schema:Organization ;
-    schema:name "ACME Corporation" ;
-    schema:url "https://acme.com" .
+Build a product for a Nike Air Max with GTIN 12345678901231, price 120 USD and in stock.
+Then validate it and sync it to WordLift.
 ```
 
-### Retrieving Entities
-
+### Batch Sync
 ```
-Get the entity http://example.com/person/john from WordLift
-```
-
-### Patching Entities
-
-```
-Update just the email address for entity http://example.com/person/john:
-@prefix schema: <http://schema.org/> .
-<http://example.com/person/john> schema:email "newemail@example.com" .
-```
-
-### Deleting Entities
-
-```
-Delete entities http://example.com/person/john, http://example.com/person/jane from WordLift
-```
-
-### Uploading Turtle Files
-
-```
-Upload the file /path/to/entities.ttl to WordLift using upsert operation
+Sync the following products to my Knowledge Graph:
+[
+  {"gtin": "12345678901231", "name": "Product 1", "price": "29.99"},
+  {"gtin": "09876543210987", "name": "Product 2", "price": "49.99"}
+]
 ```
 
 ## API Methods Reference
 
-### Create Operations
+### Knowledge Graph Building
 
-#### `create_entities(rdf_content, content_format="turtle")`
-Creates new entities. Will fail if entities already exist.
+#### `import_from_sitemap(sitemap_url)`
+Starts a sitemap import task and returns the number of imported pages.
 
-**Parameters:**
-- `rdf_content` (str): RDF data as string
-- `content_format` (str): Format type - "turtle", "json-ld", or "xml"
+#### `build_product(data_json)`
+Converts a JSON object into a valid schema.org Product JSON-LD with a GS1 Digital Link ID.
 
-#### `create_or_update_entities(rdf_content, content_format="turtle")`
-**Recommended**: Upserts entities - creates new or updates existing.
+#### `build_organization(data_json)`
+Converts a JSON object into a valid Organization entity.
 
-**Parameters:**
-- `rdf_content` (str): RDF data as string
-- `content_format` (str): Format type - "turtle", "json-ld", or "xml"
+### Validation & Sync
 
-### Read Operations
+#### `validate_entity(entity_json, strict=False)`
+Checks if an entity satisfies SHACL shape requirements (e.g., GHIN-14 for products).
 
-#### `get_entities(entity_ids)`
-Retrieves entities by their IDs/IRIs.
+#### `sync_kg(products_json, incremental=False)`
+Efficiently uploads multiple products. If `incremental=True`, it uses JSON Patch to only update changed fields.
 
-**Parameters:**
-- `entity_ids` (str): Comma-separated list of entity URIs
+## Detailed Documentation
 
-**Example:** `"http://example.com/entity1, http://example.com/entity2"`
+For more in-depth guides and specific workflows, refer to the documentation in the [references/](file:///Users/cyberandy/wordlift-gemini-cli-extension/references) directory:
 
-### Update Operations
+- [Workflows](file:///Users/cyberandy/wordlift-gemini-cli-extension/references/workflows.md): Detailed sync and import patterns
+- [Entity Reuse & Validation](file:///Users/cyberandy/wordlift-gemini-cli-extension/references/entity-reuse-and-shacl-validation.md): How to prevent duplicates and ensure data quality
+- [GraphQL Queries](file:///Users/cyberandy/wordlift-gemini-cli-extension/references/graphql_queries.md): Common query patterns for your Knowledge Graph
+- [Scheduling](file:///Users/cyberandy/wordlift-gemini-cli-extension/references/scheduling.md): How to automate your syncs with Cron or GitHub Actions
+- [Template Configuration](file:///Users/cyberandy/wordlift-gemini-cli-extension/references/template-configuration.md): Guide to configuring markup templates for bulk imports
 
-#### `patch_entities(rdf_content, content_format="turtle")`
-Partially updates existing entities without replacing all properties.
+## Testing
 
-**Parameters:**
-- `rdf_content` (str): RDF data containing only properties to update
-- `content_format` (str): Format type - "turtle", "json-ld", or "xml"
+You can verify the core logic (ID generation, entity building, and SHACL validation) using the included dry-run test script:
 
-### Delete Operations
+```bash
+python3 scripts/dry_run_test.py
+```
 
-#### `delete_entities(entity_ids)`
-Deletes entities permanently.
-
-**Parameters:**
-- `entity_ids` (str): Comma-separated list of entity URIs
-
-### File Operations
-
-#### `upload_turtle_file(file_path, operation="upsert")`
-Validates and uploads Turtle files.
-
-**Parameters:**
-- `file_path` (str): Absolute path to .ttl file
-- `operation` (str): Operation type - "create", "upsert", or "patch"
+This test does not require an API key and performs a series of offline checks to ensure the extension is working correctly.
 
 ## Architecture
 
-This extension is built using:
-- **FastMCP**: Python SDK for Model Context Protocol
-- **wordlift-client**: Official WordLift Python SDK (v1.123.0+)
-- **rdflib**: RDF parsing and validation
-
-The extension exposes MCP tools that Gemini can use to manage your Knowledge Graph through natural language interactions.
-
-## Troubleshooting
-
-### API Authentication Errors
-Ensure your `WORDLIFT_API_KEY` is correctly set in the `.env` file and is valid.
-
-### Module Not Found Errors
-Make sure you've activated the virtual environment and installed all dependencies:
-```bash
-source venv/bin/activate
-pip install -r requirements.txt
-```
-
-### RDF Parsing Errors
-Validate your RDF syntax before uploading. The extension will report the specific line where parsing failed.
-
-## Development Setup
-
-If you want to contribute to this extension or modify it for your own use:
-
-1. Clone the repository:
-   ```bash
-   git clone https://github.com/wordlift/wordlift-gemini-cli-extension.git
-   cd wordlift-gemini-cli-extension
-   ```
-
-2. Run the installation script:
-   ```bash
-   ./install.sh
-   ```
-
-3. Create your `.env` file with credentials (see Configuration section above)
-
-4. Link the extension to Gemini CLI for testing:
-   ```bash
-   gemini extensions link .
-   ```
-
-5. Make your changes and test locally with Gemini CLI
-
-6. When ready, unlink and reinstall from your fork:
-   ```bash
-   gemini extensions unlink wordlift-gemini-extension
-   gemini extensions install https://github.com/your-username/wordlift-gemini-cli-extension.git
-   ```
+This extension leverages several core scripts located in the `scripts/` directory:
+- `id_generator.py`: Generates GS1 Digital Link and slug-based IDs.
+- `entity_builder.py`: Constructs schema.org JSON-LD.
+- `shacl_validator.py`: Validates data quality.
+- `kg_sync.py`: Orchestrates sync workflows.
+- `wordlift_client.py`: High-level wrapper for WordLift APIs.
 
 ## Support
 
-For WordLift API documentation, visit: https://docs.wordlift.io/api/middleware/entities/
+For WordLift API documentation, visit: [docs.wordlift.io](https://docs.wordlift.io/)

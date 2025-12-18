@@ -2,3 +2,4 @@ mcp
 wordlift-client>=1.123.0
 rdflib
 python-dotenv
+requests
