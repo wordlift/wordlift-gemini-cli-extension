@@ -12,6 +12,7 @@
         "rdf",
         "linked-data"
     ],
+    "contextFileName": "GEMINI.md",
     "installScript": "./install.sh",
     "mcpServers": {
         "wordlift": {
