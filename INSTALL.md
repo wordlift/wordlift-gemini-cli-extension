@@ -81,12 +81,34 @@ List available tools
 ```
 
 You should see the WordLift tools:
-- `create_entities`
-- `create_or_update_entities`
-- `get_entities`
-- `patch_entities`
+
+**Knowledge Graph Builder:**
+- `import_from_sitemap` & `import_from_urls`
+- `build_product`, `build_organization`, `build_webpage`
+- `validate_entity`
+- `sync_kg`
+
+**Standard Entity Management:**
+- `get_entity`
 - `delete_entities`
+- `create_or_update_entities` (Legacy JSON-LD/Turtle)
 - `upload_turtle_file`
+
+## Advanced Configuration & Workflows
+
+Refer to the [references/](file:///Users/cyberandy/wordlift-gemini-cli-extension/references) directory for detailed guides on:
+- Automated sync workflows
+- SHACL validation and entity reuse
+- GraphQL query patterns
+- Scheduling with Cron or GitHub Actions
+
+## Testing the Installation
+
+Run the dry-run test to verify core logic without an API key:
+
+```bash
+python3 scripts/dry_run_test.py
+```
 
 ## Troubleshooting
 
