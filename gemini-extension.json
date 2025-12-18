@@ -1,7 +1,7 @@
 {
     "name": "wordlift-gemini-extension",
-    "version": "1.0.0",
-    "description": "Manage WordLift Knowledge Graphs directly from Gemini CLI with full CRUD operations",
+    "version": "1.1.0",
+    "description": "Build and manage WordLift Knowledge Graphs with GS1 Digital Link IDs, SHACL validation, and automated sync workflows",
     "publisher": "WordLift",
     "repository": "https://github.com/wordlift/wordlift-gemini-cli-extension",
     "tags": [
