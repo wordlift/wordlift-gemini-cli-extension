@@ -183,6 +183,152 @@ result = client.graphql_query("""
 print(f"Verified: {result['entity']['name']}")
 ```
 
+---
+
+## Post-Import Entity Upgrading Workflow
+
+After importing pages, you may need to upgrade entity types or add properties.
+
+### Why Use Entity Upgrader?
+
+**PATCH Limitations:**
+- ❌ Cannot change @type (WebPage → Article)
+- ❌ Limited support for nested objects
+- ❌ Requires careful operation ordering
+
+**Entity Upgrader (Fetch-Modify-Update):**
+- ✅ Changes entity types safely
+- ✅ Preserves existing properties automatically
+- ✅ Handles complex nested updates
+- ✅ Validates complete entity before upload
+
+### Step 1: Identify Entities to Upgrade
+
+```python
+from scripts.wordlift_client import WordLiftClient
+
+client = WordLiftClient(api_key)
+
+# Find all WebPages that should be Articles
+result = client.graphql_query("""
+  query {
+    entities(
+      query: {
+        typeConstraint: { in: ["http://schema.org/WebPage"] }
+        urlConstraint: { regex: { pattern: "^/blog/" } }
+      }
+      rows: 1000
+    ) {
+      iri
+      url: string(name: "schema:url")
+      name: string(name: "schema:name")
+    }
+  }
+""")
+
+print(f"Found {len(result['entities'])} pages to upgrade")
+
+# Save IRIs to file for batch processing
+with open('blog-pages.txt', 'w') as f:
+    for entity in result['entities']:
+        f.write(entity['iri'] + '\n')
+```
+
+### Step 2: Single Entity Upgrade
+
+```python
+from scripts.entity_upgrader import upgrade_entity
+
+# Change type and add author
+success = upgrade_entity(
+    client,
+    "https://data.wordlift.io/wl92832/webpage/my-post",
+    new_type="Article",
+    new_props={
+        "author": {
+            "@type": "Person",
+            "@id": "https://data.wordlift.io/wl92832/person/john-doe",
+            "name": "John Doe"
+        },
+        "datePublished": "2024-01-15"
+    }
+)
+
+if success:
+    print("✓ Entity upgraded successfully")
+```
+
+### Step 3: Batch Upgrade
+
+```python
+from scripts.entity_upgrader import upgrade_batch
+
+# Upgrade all blog pages to Articles
+iris = []
+with open('blog-pages.txt', 'r') as f:
+    iris = [line.strip() for line in f if line.strip()]
+
+stats = upgrade_batch(
+    client,
+    iris,
+    new_type="Article",
+    new_props={
+        "publisher": {
+            "@type": "Organization",
+            "@id": "https://data.wordlift.io/wl92832/organization/my-company",
+            "name": "My Company",
+            "url": "https://mysite.com"
+        }
+    }
+)
+
+print(f"Upgraded: {stats['success']}/{stats['total']}")
+```
+
+### Step 4: Verify Upgrades
+
+```python
+# Verify types changed
+result = client.graphql_query("""
+  query {
+    articles: entities(
+      query: { typeConstraint: { in: ["http://schema.org/Article"] } }
+      rows: 10
+    ) {
+      iri
+      name: string(name: "schema:name")
+      author: resource(name: "schema:author") {
+        name: string(name: "schema:name")
+      }
+      publisher: resource(name: "schema:publisher") {
+        name: string(name: "schema:name")
+      }
+    }
+  }
+""")
+
+print(f"Total Articles: {len(result['articles'])}")
+for article in result['articles'][:5]:
+    print(f"  {article['name']} by {article['author']['name']}")
+```
+
+### Command-Line Usage
+
+```bash
+# Single entity upgrade
+python scripts/entity_upgrader.py \
+  https://data.wordlift.io/wl92832/webpage/my-post \
+  --type Article \
+  --props '{"author": {"@type": "Person", "name": "John Doe"}}'
+
+# Batch upgrade from file
+python scripts/entity_upgrader.py \
+  --batch-file blog-pages.txt \
+  --type Article
+```
+
+---
+
 ## Daily Sync Workflow
 
 ### Full Replacement Sync

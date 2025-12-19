@@ -1,4 +1,28 @@
-# Release v1.1.0 - Knowledge Graph Builder
+# Release v1.2.0 - Entity Upgrading & Documentation Overhaul
+
+## 🚀 Version 1.2.0 Highlights
+
+This release introduces major improvements to entity lifecycle management and provides a comprehensive documentation overhaul for better developer experience.
+
+## ✨ New Features
+
+### 🔄 Entity Upgrader
+- **Type Upgrading**: Safely change entity types (e.g., WebPage → Article) while preserving existing data.
+- **Property Enrichment**: Batch add complex nested properties to existing entities via the new `entity_upgrader.py` tool.
+
+### 📚 Documentation Overhaul
+- **Refined Standing Instructions (GEMINI.md)**: Completely rewritten to focus on core principles: Semantic IDs, Data Quality, and Efficiency.
+- **Improved Tool Selection**: Clearer guidance on when to use each script in the suite.
+- **Entity Upgrading Guide**: New dedicated documentation for advanced KG maintenance workflows.
+
+### 🧹 Workspace Optimization
+- **Streamlined Repository**: Removed legacy prototypes and test scripts.
+- **Synced Workflow Core**: Ensures the local `scripts/` folder is always the source of truth for KG operations.
+
+## 🔧 Internal Improvements
+- New `entity_upgrader.py` script added to core suite.
+- Updated `gemini-extension.json` for enhanced context discovery.
+- Fixed several technical references in documentation files.
 
 ## 🚀 Knowledge Graph Builder Suite
 

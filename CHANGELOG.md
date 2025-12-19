@@ -5,6 +5,17 @@ All notable changes to the WordLift Gemini CLI Extension will be documented in t
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.0] - 2025-12-19
+
+### Added
+- **Entity Upgrading**: New `entity_upgrader.py` script for robust "Fetch-Modify-Update" workflows.
+- **Enhanced Documentation**: Comprehensive update to `GEMINI.md` with refined core principles and tool selection guides.
+- **Integrated Guides**: New reference documentation for `entity-upgrading.md` and updated `workflows.md`.
+
+### Changed
+- **Workspace Cleanup**: Removed legacy test scripts and unneeded scraper prototypes (`kg_builder.py`).
+- **Standardized Core**: Synced internal scripts with the project folder for better consistency.
+
 ## [1.1.0] - 2025-12-18
 
 ### Added
