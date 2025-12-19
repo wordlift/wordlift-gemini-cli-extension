@@ -5,8 +5,12 @@ Checks for existing entities in KG and reuses them to avoid duplicates.
 """
 
 from typing import Dict, List, Optional, Any
-from wordlift_client import WordLiftClient
-from id_generator import generate_entity_id, generate_slug
+try:
+    from .wordlift_client import WordLiftClient
+    from .id_generator import generate_entity_id, generate_slug
+except (ImportError, ValueError):
+    from wordlift_client import WordLiftClient
+    from id_generator import generate_entity_id, generate_slug
 
 
 class EntityReuseManager:
@@ -84,7 +88,10 @@ class EntityReuseManager:
 
         # Create new organization
         print(f"+ Creating new organization: {name}")
-        from entity_builder import EntityBuilder
+        try:
+            from .entity_builder import EntityBuilder
+        except (ImportError, ValueError):
+            from entity_builder import EntityBuilder
         builder = EntityBuilder(self.dataset_uri)
 
         org = builder.build_organization(org_data)

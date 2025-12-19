@@ -1,0 +1,30 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "wordlift-gemini-extension"
+version = "1.2.1"
+description = "Build and manage WordLift Knowledge Graphs with GS1 Digital Link IDs and SHACL validation"
+readme = "README.md"
+requires-python = ">=3.8"
+license = {text = "MIT"}
+authors = [
+    {name = "WordLift", email = "hello@wordlift.io"}
+]
+dependencies = [
+    "requests",
+    "rdflib",
+    "pydantic",
+    "pyshacl",
+    "python-dotenv",
+    "beautifulsoup4"
+]
+
+[project.scripts]
+wordlift-upgrade = "scripts.entity_upgrader:main"
+wordlift-sync = "scripts.kg_sync:main"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["wl_extension*"]

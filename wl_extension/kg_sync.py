@@ -10,9 +10,14 @@ from pathlib import Path
 from typing import List, Dict, Any, Set
 from datetime import datetime
 
-from wordlift_client import WordLiftClient
-from entity_builder import EntityBuilder, create_product_from_scraped_data
-from id_generator import generate_product_id, normalize_gtin
+try:
+    from .wordlift_client import WordLiftClient
+    from .entity_builder import EntityBuilder, create_product_from_scraped_data
+    from .id_generator import generate_product_id, normalize_gtin
+except (ImportError, ValueError):
+    from wordlift_client import WordLiftClient
+    from entity_builder import EntityBuilder, create_product_from_scraped_data
+    from id_generator import generate_product_id, normalize_gtin
 
 
 class KGSyncOrchestrator:
@@ -37,7 +42,10 @@ class KGSyncOrchestrator:
 
         # Initialize reuse manager if enabled
         if enable_reuse:
-            from entity_reuse import EntityReuseManager
+            try:
+                from .entity_reuse import EntityReuseManager
+            except (ImportError, ValueError):
+                from entity_reuse import EntityReuseManager
             self.reuse_manager = EntityReuseManager(self.client, dataset_uri)
             self.reuse_manager.preload_cache()
         else:
@@ -118,7 +126,10 @@ class KGSyncOrchestrator:
 
             # Validate entities before upload
             if self.enable_validation:
-                from shacl_validator import SHACLValidator
+                try:
+                    from .shacl_validator import SHACLValidator
+                except (ImportError, ValueError):
+                    from shacl_validator import SHACLValidator
                 validator = SHACLValidator()
 
                 all_entities = to_create + to_update

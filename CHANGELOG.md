@@ -5,6 +5,20 @@ All notable changes to the WordLift Gemini CLI Extension will be documented in t
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.1] - 2025-12-19
+
+### Added
+- **Geographical Template**: Added generic templates for creating `Place` and `State` entities to unblock Knowledge Graph linking.
+- **Portability Pack**: Transitioned core logic to a standard Python package (`wl_extension`) with `pyproject.toml` and `__init__.py` for robust importing.
+
+### Fixed
+- **Portability**: Resolved fragile relative paths and `sys.path` hacks in `server.py` and internal scripts.
+- **Missing Tools**: Re-implemented `template_configurator.py` to restore interactive markup validation workflows.
+
+### Changed
+- **Generalization**: Refactored `GEMINI.md` to be topic-agnostic, replacing specific examples (Turkey, Nike, Acme) with generic placeholders.
+- **Package Refactoring**: Renamed internal `scripts` directory to `wl_extension` to avoid namespace conflicts.
+
 ## [1.2.0] - 2025-12-19
 
 ### Added

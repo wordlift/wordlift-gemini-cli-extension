@@ -1,6 +1,6 @@
-# Release v1.2.0 - Entity Upgrading & Documentation Overhaul
+# Release v1.2.1 - Portability & Generalization
 
-## 🚀 Version 1.2.0 Highlights
+## 🚀 Version 1.2.1 Highlights
 
 This release introduces major improvements to entity lifecycle management and provides a comprehensive documentation overhaul for better developer experience.
 

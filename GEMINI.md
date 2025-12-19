@@ -24,7 +24,7 @@ Use the Sitemap Import API to jumpstart your Knowledge Graph:
 **API Endpoint:** `POST https://api.wordlift.io/sitemap-imports`
 
 ```python
-from scripts.wordlift_client import WordLiftClient
+from wl_extension.wordlift_client import WordLiftClient
 
 client = WordLiftClient(api_key)
 
@@ -65,7 +65,7 @@ result = client.graphql_query("""
 For e-commerce, create products with GS1 Digital Link IDs:
 
 ```python
-from scripts.entity_builder import EntityBuilder
+from wl_extension.entity_builder import EntityBuilder
 
 builder = EntityBuilder("https://data.wordlift.io/wl123")
 
@@ -87,7 +87,7 @@ client.create_or_update_entity(product)
 Products use GS1 Digital Link format with GTIN-14:
 
 ```python
-from scripts.id_generator import generate_product_id
+from wl_extension.id_generator import generate_product_id
 
 # Basic product
 product_id = generate_product_id("https://data.wordlift.io/wl123", "12345678901231")
@@ -107,15 +107,15 @@ GTINs are automatically:
 Non-product entities use descriptive slug-based IDs:
 
 ```python
-from scripts.id_generator import generate_entity_id
+from wl_extension.id_generator import generate_entity_id
 
 # Organization
-org_id = generate_entity_id("https://data.wordlift.io/wl123", "organization", "Acme Corporation")
-# Result: https://data.wordlift.io/wl123/organization/acme-corporation
+org_id = generate_entity_id("https://data.wordlift.io/wl123", "organization", "Example Organization")
+# Result: https://data.wordlift.io/wl123/organization/example-organization
 
 # Person
-person_id = generate_entity_id("https://data.wordlift.io/wl123", "person", "John Doe")
-# Result: https://data.wordlift.io/wl123/person/john-doe
+person_id = generate_entity_id("https://data.wordlift.io/wl123", "person", "Example Person")
+# Result: https://data.wordlift.io/wl123/person/example-person
 
 # WebPage (slug from URL path or title)
 page_id = generate_entity_id("https://data.wordlift.io/wl123", "webpage", "About Us")
@@ -126,8 +126,8 @@ homepage_id = generate_entity_id("https://data.wordlift.io/wl123", "webpage", "h
 # Result: https://data.wordlift.io/wl123/webpage/homepage
 
 # State-specific service
-service_id = generate_entity_id("https://data.wordlift.io/wl123", "service", "debt-consolidation-alaska")
-# Result: https://data.wordlift.io/wl123/service/debt-consolidation-alaska
+service_id = generate_entity_id("https://data.wordlift.io/wl123", "service", "service-name-region")
+# Result: https://data.wordlift.io/wl123/service/service-name-region
 ```
 
 Slug generation:
@@ -154,7 +154,7 @@ product = builder.build_product({
     'gtin': '12345678901231',
     'name': 'Product Name',
     'description': 'Product description',
-    'brand': 'Nike',
+    'brand': 'Brand Name',
     'price': '99.99',
     'currency': 'USD',
     'availability': 'InStock',
@@ -170,7 +170,7 @@ client.create_or_update_entity(product)
 Always validate entities before uploading:
 
 ```python
-from scripts.shacl_validator import SHACLValidator
+from wl_extension.shacl_validator import SHACLValidator
 
 validator = SHACLValidator()
 
@@ -220,9 +220,9 @@ webpage = builder.build_webpage({
 
 ### Problem
 When creating multiple products or articles, you often reference the same entities:
-- **Brands** (e.g., "Nike" across 100 products)
-- **Publishers** (e.g., "Acme Corporation" across articles)
-- **Authors** (e.g., "John Doe" across blog posts)
+- **Brands** (e.g., "Brand Name" across 100 products)
+- **Publishers** (e.g., "Example Organization" across articles)
+- **Authors** (e.g., "Example Person" across blog posts)
 
 Without checking, you'd create duplicates every time, fragmenting your data.
 
@@ -231,8 +231,8 @@ Without checking, you'd create duplicates every time, fragmenting your data.
 The `EntityReuseManager` uses GraphQL queries to check if entities already exist:
 
 ```python
-from scripts.entity_reuse import EntityReuseManager
-from scripts.entity_builder import EntityBuilder
+from wl_extension.entity_reuse import EntityReuseManager
+from wl_extension.entity_builder import EntityBuilder
 
 client = WordLiftClient(api_key)
 reuse_manager = EntityReuseManager(client, "https://data.wordlift.io/wl123")
@@ -248,13 +248,13 @@ reuse_manager.preload_cache()
 builder = EntityBuilder(dataset_uri, reuse_manager=reuse_manager)
 
 # Build products - brands are automatically reused
-product1 = builder.build_product({'gtin': '12345', 'brand': 'Nike', ...})
-# Output: + Creating new brand: Nike
+product1 = builder.build_product({'gtin': '12345', 'brand': 'Brand Name', ...})
+# Output: + Creating new brand: Brand Name
 
-product2 = builder.build_product({'gtin': '67890', 'brand': 'Nike', ...})
-# Output: ✓ Reusing existing brand: Nike
+product2 = builder.build_product({'gtin': '67890', 'brand': 'Brand Name', ...})
+# Output: ✓ Reusing existing brand: Brand Name
 
-# Both products reference the same Nike brand entity!
+# Both products reference the same brand entity!
 ```
 
 ### Supported Entity Types
@@ -262,19 +262,19 @@ product2 = builder.build_product({'gtin': '67890', 'brand': 'Nike', ...})
 ```python
 # Organizations (Publishers)
 publisher_iri = reuse_manager.get_or_create_organization({
-    'name': 'Acme Corporation',
-    'url': 'https://acme.com',
-    'logo': 'https://acme.com/logo.png'
+    'name': 'Example Organization',
+    'url': 'https://example.com',
+    'logo': 'https://example.com/logo.png'
 })
 
 # People (Authors)
 author_iri = reuse_manager.get_or_create_person({
-    'name': 'John Doe',
+    'name': 'Example Person',
     'jobTitle': 'Senior Writer'
 })
 
 # Brands
-brand = reuse_manager.get_or_create_brand('Nike')
+brand = reuse_manager.get_or_create_brand('Brand Name')
 ```
 
 ### How It Works
@@ -299,7 +299,7 @@ Invalid data breaks your Knowledge Graph:
 Built-in SHACL shapes validate entities before upload:
 
 ```python
-from scripts.shacl_validator import SHACLValidator
+from wl_extension.shacl_validator import SHACLValidator
 
 validator = SHACLValidator()
 
@@ -347,7 +347,7 @@ report = validator.get_validation_report(results)
 print(report)
 
 # Filter valid entities
-from scripts.shacl_validator import validate_before_upload
+from wl_extension.shacl_validator import validate_before_upload
 
 valid_entities, invalid_entities = validate_before_upload(entities)
 
@@ -374,7 +374,7 @@ See `references/entity-reuse-and-shacl-validation.md` for complete documentation
 Both features are enabled by default:
 
 ```python
-from scripts.kg_sync import KGSyncOrchestrator
+from wl_extension.kg_sync import KGSyncOrchestrator
 
 orchestrator = KGSyncOrchestrator(
     api_key=api_key,
@@ -395,18 +395,18 @@ stats = orchestrator.sync_products(products_data)
 **Command-line:**
 ```bash
 # With validation and reuse (default)
-python scripts/kg_sync.py \
+python wl_extension/kg_sync.py \
   --api-key YOUR_KEY \
   --dataset-uri https://data.wordlift.io/wl123 \
   --input products.json
 
 # Disable validation (not recommended)
-python scripts/kg_sync.py \
+python wl_extension/kg_sync.py \
   --input products.json \
   --no-validation
 
 # Disable entity reuse (not recommended)
-python scripts/kg_sync.py \
+python wl_extension/kg_sync.py \
   --input products.json \
   --no-reuse
 ```
@@ -414,7 +414,7 @@ python scripts/kg_sync.py \
 ### Product Entity
 
 ```python
-from scripts.entity_builder import EntityBuilder
+from wl_extension.entity_builder import EntityBuilder
 
 builder = EntityBuilder("https://data.wordlift.io/wl123")
 
@@ -436,16 +436,16 @@ Result is proper JSON-LD with:
 - schema.org vocabulary
 - Validated structure
 
-### Organization Entity
+# Organization Entity
 
 ```python
 org = builder.build_organization({
-    'name': 'Acme Corporation',
-    'url': 'https://acme.com',
-    'logo': 'https://acme.com/logo.png',
-    'email': 'info@acme.com'
+    'name': 'Example Organization',
+    'url': 'https://example.com',
+    'logo': 'https://example.com/logo.png',
+    'email': 'info@example.com'
 })
-# ID: https://data.wordlift.io/wl123/organization/acme-corporation
+# ID: https://data.wordlift.io/wl123/organization/example-organization
 ```
 
 ### Web Page Entity
@@ -484,8 +484,8 @@ The @id uses a slug-based pattern within your dataset URI, while the actual page
 ### Batch Create/Update
 
 ```python
-from scripts.wordlift_client import WordLiftClient
-from scripts.entity_builder import EntityBuilder
+from wl_extension.wordlift_client import WordLiftClient
+from wl_extension.entity_builder import EntityBuilder
 
 client = WordLiftClient(api_key)
 builder = EntityBuilder("https://data.wordlift.io/wl123")
@@ -562,8 +562,8 @@ result = client.graphql_query("""
 **After importing pages, upgrade entity types and add properties:**
 
 ```python
-from scripts.entity_upgrader import upgrade_entity, upgrade_batch
-from scripts.wordlift_client import WordLiftClient
+from wl_extension.entity_upgrader import upgrade_entity, upgrade_batch
+from wl_extension.wordlift_client import WordLiftClient
 
 client = WordLiftClient(api_key)
 
@@ -574,9 +574,9 @@ upgrade_entity(
     new_type="Article",
     new_props={
         "author": {
-            "@type": "Person",
-            "@id": "https://data.wordlift.io/wl92832/person/john-doe",
-            "name": "John Doe"
+            "@type": "Example Person",
+            "@id": "https://data.wordlift.io/wl92832/person/example-person",
+            "name": "Example Person"
         }
     }
 )
@@ -603,10 +603,10 @@ stats = upgrade_batch(client, iris, new_type="Article")
 **Command-line:**
 ```bash
 # Single entity
-python scripts/entity_upgrader.py <IRI> --type Article
+python wl_extension/entity_upgrader.py <IRI> --type Article
 
 # Batch from file
-python scripts/entity_upgrader.py --batch-file iris.txt --type Article --props '{...}'
+python wl_extension/entity_upgrader.py --batch-file iris.txt --type Article --props '{...}'
 ```
 
 See `references/entity-upgrading.md` for complete guide.
@@ -616,8 +616,8 @@ See `references/entity-upgrading.md` for complete guide.
 **CRITICAL**: Before importing hundreds of pages, configure and validate your markup template using samples.
 
 ```python
-from scripts.template_configurator import interactive_template_configuration
-from scripts.wordlift_client import WordLiftClient
+from wl_extension.template_configurator import interactive_template_configuration
+from wl_extension.wordlift_client import WordLiftClient
 
 # Select 2-3 representative sample pages
 sample_urls = [
@@ -683,7 +683,7 @@ See `references/workflows.md` for detailed workflow patterns.
 **For automated scheduling**, see `references/scheduling.md` for cron, GitHub Actions, Docker, and cloud function setups.
 
 ```bash
-python scripts/kg_sync.py \
+python wl_extension/kg_sync.py \
   --api-key YOUR_API_KEY \
   --dataset-uri https://data.wordlift.io/wl123 \
   --input products.json \
@@ -692,7 +692,7 @@ python scripts/kg_sync.py \
 
 For incremental updates:
 ```bash
-python scripts/kg_sync.py \
+python wl_extension/kg_sync.py \
   --api-key YOUR_API_KEY \
   --dataset-uri https://data.wordlift.io/wl123 \
   --input products.json \
@@ -818,8 +818,28 @@ Note: The @id uses this pattern, while the actual page URL is stored in the `url
 ### Services
 `{dataset_uri}/service/{slug}`
 
-### States/Locations
+### Geographical Entities (Places/States)
 `{dataset_uri}/state/{slug}`
+
+#### Template for Creating a Missing Geographical Entity
+If you are blocked because a region or country is missing from your KG, use this pattern to create it:
+
+```python
+from wl_extension.entity_builder import EntityBuilder
+
+builder = EntityBuilder(dataset_uri)
+
+# Create a State/Place entity
+region = builder.build_webpage({
+    'url': 'https://en.wikipedia.org/wiki/Generic_Region', # Or a reference URL
+    'name': 'Region Name',
+    'description': 'Description of the region or country',
+    'slug': 'region-name'
+})
+region['@type'] = 'State' # Or 'Place', 'Country'
+
+client.create_or_update_entity(region)
+```
 
 ## Error Handling
 

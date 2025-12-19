@@ -16,19 +16,19 @@ current_dir = os.path.dirname(os.path.abspath(__file__))
 sys.path.append(current_dir)
 
 try:
-    from wordlift_client import WordLiftClient
-except ImportError:
-    # Fallback if running from a different directory
+    from .wordlift_client import WordLiftClient
+except (ImportError, ValueError):
+    # Fallback if running as a standalone script
     try:
-        from scripts.wordlift_client import WordLiftClient
+        from wordlift_client import WordLiftClient
     except ImportError:
-         print("Error: Could not import WordLiftClient.")
+         print("Error: Could not import WordLiftClient. Ensure you are running from the package root or have installed the package.")
          sys.exit(1)
 
 def upgrade_entity(client, iri, new_type=None, new_props=None):
     """
     Fetches an entity, updates its type/properties, and syncs it back.
-    
+
     Args:
         client: WordLiftClient instance
         iri: The entity URI to update
@@ -36,7 +36,7 @@ def upgrade_entity(client, iri, new_type=None, new_props=None):
         new_props: (Optional) Dictionary of properties to add/update
     """
     print(f"Fetching entity: {iri}...")
-    
+
     # 1. Fetch current basic data
     # We use a broad query to get the label and description to preserve them
     query = """
@@ -66,10 +66,10 @@ def upgrade_entity(client, iri, new_type=None, new_props=None):
         "@context": "https://schema.org",
         "@id": iri,
     }
-    
+
     if new_type:
         updated_entity["@type"] = new_type
-    
+
     # Preserve key fields found in KG
     if resource.get('name'): updated_entity['name'] = resource['name']
     if resource.get('description'): updated_entity['description'] = resource['description']
@@ -81,7 +81,7 @@ def upgrade_entity(client, iri, new_type=None, new_props=None):
         updated_entity.update(new_props)
 
     print(f"Updating entity with Type: {updated_entity.get('@type', 'Unchanged')} and {len(new_props or {})} new properties...")
-    
+
     # 3. Sync back
     try:
         client.create_or_update_entity(updated_entity)
@@ -97,18 +97,18 @@ def main():
     parser.add_argument('--type', help='The new Schema.org type (e.g., TouristDestination)')
     parser.add_argument('--props', help='JSON string of properties to add (e.g., \'{"alternateName": "X"}\'')
     parser.add_argument('--api-key', help='WordLift API Key (optional, defaults to env var)')
-    
+
     args = parser.parse_args()
 
     load_dotenv()
     api_key = args.api_key or os.getenv("WORDLIFT_API_KEY")
-    
+
     if not api_key:
         print("Error: API Key not provided.")
         sys.exit(1)
 
     client = WordLiftClient(api_key)
-    
+
     props = None
     if args.props:
         try:

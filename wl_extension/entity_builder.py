@@ -7,7 +7,10 @@ Creates properly structured JSON-LD entities with correct IDs.
 import json
 from typing import Dict, List, Optional, Any
 from datetime import datetime
-from id_generator import generate_product_id, generate_entity_id, normalize_gtin, generate_slug
+try:
+    from .id_generator import generate_product_id, generate_entity_id, normalize_gtin, generate_slug
+except (ImportError, ValueError):
+    from id_generator import generate_product_id, generate_entity_id, normalize_gtin, generate_slug
 
 
 class EntityBuilder:
@@ -246,7 +249,10 @@ class EntityBuilder:
                 slug = 'homepage'
 
         # Generate ID using slug
-        from id_generator import generate_entity_id
+        try:
+            from .id_generator import generate_entity_id
+        except (ImportError, ValueError):
+            from id_generator import generate_entity_id
         webpage_id = generate_entity_id(self.dataset_uri, "webpage", slug)
 
         # Build entity

@@ -7,17 +7,17 @@ from mcp.server.fastmcp import FastMCP
 from dotenv import load_dotenv
 import rdflib
 
-# Add scripts directory to path
-sys.path.append(os.path.join(os.path.dirname(__file__), "scripts"))
+# Add wl_extension directory to path
+sys.path.append(os.path.join(os.path.dirname(__file__), "wl_extension"))
 
 # Import new components
-from scripts.wordlift_client import WordLiftClient
-from scripts.entity_builder import EntityBuilder
-from scripts.id_generator import generate_product_id, generate_entity_id
-from scripts.shacl_validator import SHACLValidator
-from scripts.markup_validator import MarkupValidator
-from scripts.kg_sync import KGSyncOrchestrator
-from scripts.template_configurator import TemplateConfigurator
+from wl_extension.wordlift_client import WordLiftClient
+from wl_extension.entity_builder import EntityBuilder
+from wl_extension.id_generator import generate_product_id, generate_entity_id
+from wl_extension.shacl_validator import SHACLValidator
+from wl_extension.markup_validator import MarkupValidator
+from wl_extension.kg_sync import KGSyncOrchestrator
+from wl_extension.template_configurator import TemplateConfigurator
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
