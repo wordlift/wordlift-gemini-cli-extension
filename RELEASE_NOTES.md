@@ -1,3 +1,20 @@
+# Release Notes
+
+## Release v1.3.0 - Agent Skills Support
+
+### 🧠 Agent Skills
+- **New Skill**: Added `wordlift-kg-builder` skill. This encapsulates the entire Knowledge Graph building expertise into a single, discoverable capability for Gemini.
+- **On-Demand Expertise**: The agent now "pulls in" instructions for sitemap imports, entity building, and SHACL validation only when relevant to your task.
+
+### 🧹 Structural Improvements
+- Refactored project structure to adopt the Agent Skills standard.
+- Moved documentation and references into the Skill's context.
+
+### 🔌 Standard MCP Tools
+- Retained core tools (`import_from_sitemap`, `build_product`, `sync_kg`) as standard MCP tools for direct usage.
+
+---
+
 # Release v1.2.1 - Portability & Generalization
 
 ## 🚀 Version 1.2.1 Highlights

@@ -1,0 +1,36 @@
+[
+    {
+        "gtin": "12345678901231",
+        "name": "Example Product Name",
+        "description": "Detailed product description that highlights key features and benefits.",
+        "brand": "Brand Name",
+        "sku": "SKU-001",
+        "price": "29.99",
+        "currency": "USD",
+        "availability": "InStock",
+        "image": "https://example.com/images/product1.jpg",
+        "rating": "4.5",
+        "reviewCount": "120",
+        "serial": null,
+        "lot": null,
+        "mpn": "MPN-123",
+        "color": "Blue",
+        "size": "Medium"
+    },
+    {
+        "gtin": "98765432109876",
+        "name": "Another Product",
+        "description": "Another great product with different features.",
+        "brand": "Different Brand",
+        "sku": "SKU-002",
+        "price": "49.99",
+        "currency": "USD",
+        "availability": "PreOrder",
+        "image": [
+            "https://example.com/images/product2-1.jpg",
+            "https://example.com/images/product2-2.jpg"
+        ],
+        "rating": "4.8",
+        "reviewCount": "245"
+    }
+]

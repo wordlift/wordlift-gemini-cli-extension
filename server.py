@@ -7,17 +7,18 @@ from mcp.server.fastmcp import FastMCP
 from dotenv import load_dotenv
 import rdflib
 
-# Add wl_extension directory to path
-sys.path.append(os.path.join(os.path.dirname(__file__), "wl_extension"))
+# Add skills scripts directory to path
+# Add skills scripts directory to path (prioritize over installed packages)
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), "skills", "wordlift-kg-builder", "scripts"))
 
 # Import new components
-from wl_extension.wordlift_client import WordLiftClient
-from wl_extension.entity_builder import EntityBuilder
-from wl_extension.id_generator import generate_product_id, generate_entity_id
-from wl_extension.shacl_validator import SHACLValidator
-from wl_extension.markup_validator import MarkupValidator
-from wl_extension.kg_sync import KGSyncOrchestrator
-from wl_extension.template_configurator import TemplateConfigurator
+from wordlift_client import WordLiftClient
+from entity_builder import EntityBuilder
+from id_generator import generate_product_id, generate_entity_id
+from shacl_validator import SHACLValidator
+from markup_validator import MarkupValidator
+from kg_sync import KGSyncOrchestrator
+from template_configurator import TemplateConfigurator
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
