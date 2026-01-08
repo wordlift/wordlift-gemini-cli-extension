@@ -1,1 +1,0 @@
-# WordLift Extension Scripts Package
