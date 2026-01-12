@@ -25,5 +25,10 @@
                 "PYTHONUNBUFFERED": "1"
             }
         }
+    },
+    "skills": {
+        "wordlift-kg-builder": {
+            "path": "skills/wordlift-kg-builder/SKILL.md"
+        }
     }
 }
