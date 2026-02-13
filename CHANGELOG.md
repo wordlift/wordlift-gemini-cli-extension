@@ -5,6 +5,12 @@ All notable changes to the WordLift Gemini CLI Extension will be documented in t
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.3.1] - 2026-02-13
+
+
+### Fixed
+- **Client**: Fixed create_or_update_entity(ies) methods to use `/entities` API instead of deprecated `/dataset` API, preventing invalid entity ID insertion.
+
 ## [1.2.1] - 2025-12-19
 
 ### Added
