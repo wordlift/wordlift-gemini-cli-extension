@@ -272,22 +272,17 @@ class WordLiftClient:
         if '@id' not in entity:
             raise ValueError("Entity must have an @id field")
 
-        url = f"{self.base_url}/dataset"
-        params = {
-            "uri": entity['@id'],
-            "private": False
-        }
+        url = f"{self.base_url}/entities"
 
         headers = {
             "Authorization": f"Key {self.api_key}",
-            "Content-Type": "application/ld+json"
+            "Content-Type": "application/ld+json",
         }
 
-        response = requests.post(
+        response = requests.put(
             url,
-            params=params,
             headers=headers,
-            data=json.dumps(entity)
+            json=entity
         )
         response.raise_for_status()
 
@@ -303,23 +298,20 @@ class WordLiftClient:
         Returns:
             Response data
         """
-        url = f"{self.base_url}/dataset/batch"
+        url = f"{self.base_url}/entities"
+        headers = {
+            "Authorization": f"Key {self.api_key}",
+            "Content-Type": "application/ld+json",
+        }
 
-        batch_data = []
         for entity in entities:
-            if '@id' not in entity:
+            if "@id" not in entity:
                 raise ValueError(f"Entity must have an @id field: {entity}")
 
-            batch_data.append({
-                "uri": entity['@id'],
-                "model": json.dumps(entity),
-                "private": False
-            })
-
-        response = requests.post(url, headers=self.headers, json=batch_data)
+        response = requests.put(url, headers=headers, json=entities)
         response.raise_for_status()
 
-        return response.json()
+        return response.json() if response.text else {}
 
     def patch_entity(self, entity_id: str, patches: List[Dict[str, Any]]) -> Dict[str, Any]:
         """
