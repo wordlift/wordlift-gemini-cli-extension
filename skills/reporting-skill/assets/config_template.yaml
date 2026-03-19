@@ -1,0 +1,64 @@
+# SEO Performance Report — Configuration Template
+# Copy this file to your project directory as config.yaml and fill in the values.
+
+# ── Site Information ─────────────────────────────────────────────────────────
+site:
+  domain: "https://www.example.com/"    # Must match GSC property exactly
+  name: "My Website"                     # Used in report titles
+
+# ── Google Search Console ────────────────────────────────────────────────────
+gsc:
+  enabled: true
+  client_secret: "./client_secret.json"  # OAuth client secret (Desktop app)
+  credentials_cache: "./credentials.json" # Auto-created after first auth
+
+# ── Google Analytics 4 ───────────────────────────────────────────────────────
+ga4:
+  enabled: true
+  property_id: "123456789"               # GA4 property ID (numeric)
+  client_secret: "./client_secret.json"  # Can reuse same OAuth app
+  credentials_cache: "./ga4_credentials.json"
+
+# ── Date Ranges ──────────────────────────────────────────────────────────────
+# GSC data has ~3-day lag; set after_end to at least 3 days before today.
+dates:
+  before_start: "2026-01-01"
+  before_end: "2026-01-31"
+  after_start: "2026-02-01"
+  after_end: "2026-02-28"
+
+# ── URL Groups (Optional) ───────────────────────────────────────────────────
+# For A/B testing analysis. Both must be provided together.
+# Each CSV should have a column named "url" with the full page URLs.
+# If omitted, site-wide analysis is performed.
+groups:
+  variant_csv: ""                        # e.g., "./variant_urls.csv"
+  control_csv: ""                        # e.g., "./control_urls.csv"
+
+# ── Output ───────────────────────────────────────────────────────────────────
+output:
+  directory: "./output"
+  chart_dpi: 150
+
+# ── Analysis Options ─────────────────────────────────────────────────────────
+analysis:
+  causal_impact: false                   # Requires variant/control groups + GSC
+  schema_analysis: false                 # Requires entity matrix CSV
+  entity_matrix_csv: ""                  # CSV: url column + schema class columns with ✅
+  ai_sources:                            # Override default AI referral source list
+    - chatgpt.com
+    - chat.openai.com
+    - perplexity.ai
+    - gemini.google.com
+    - copilot.microsoft.com
+    - claude.ai
+    - bard.google.com
+    - you.com
+    - poe.com
+    - phind.com
+    - meta.ai
+
+# ── Report Options ───────────────────────────────────────────────────────────
+report:
+  author: ""                             # Author name on cover page
+  logo_path: ""                          # Path to logo image for cover page
