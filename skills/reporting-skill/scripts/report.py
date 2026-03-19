@@ -37,6 +37,31 @@ C_WHITE = (255, 255, 255)
 C_BG = (245, 247, 250)
 
 
+def safe_text(text: str) -> str:
+    """Sanitize Unicode characters to ASCII equivalents for fpdf2 Helvetica."""
+    replacements = {
+        '\u2013': '-',   # en-dash
+        '\u2014': '--',  # em-dash
+        '\u2018': "'",   # left single quote
+        '\u2019': "'",   # right single quote
+        '\u201c': '"',   # left double quote
+        '\u201d': '"',   # right double quote
+        '\u2026': '...', # ellipsis
+        '\u00b7': '-',   # middle dot
+        '\u2022': '-',   # bullet
+        '\u2192': '->',  # right arrow
+        '\u2190': '<-',  # left arrow
+        '\u2191': '^',   # up arrow
+        '\u2193': 'v',   # down arrow
+        '\u2264': '<=',  # less than or equal
+        '\u2265': '>=',  # greater than or equal
+        '\u00b1': '+/-', # plus-minus
+    }
+    for char, repl in replacements.items():
+        text = text.replace(char, repl)
+    return text
+
+
 class SEOReport(FPDF):
     """Custom PDF report with branding and helper methods."""
 
@@ -52,7 +77,7 @@ class SEOReport(FPDF):
             return  # Skip header on cover page
         self.set_font('Helvetica', 'I', 8)
         self.set_text_color(*C_GRAY)
-        self.cell(0, 8, f'{self.site_name} — SEO Performance Report', align='L')
+        self.cell(0, 8, safe_text(f'{self.site_name} - SEO Performance Report'), align='L')
         self.cell(0, 8, f'Page {self.page_no()}', align='R', new_x="LMARGIN", new_y="NEXT")
         self.set_draw_color(*C_LIGHT_GRAY)
         self.line(self.l_margin, self.get_y(), self.w - self.r_margin, self.get_y())
@@ -71,7 +96,7 @@ class SEOReport(FPDF):
         """Add a section title with colored underline."""
         self.set_font('Helvetica', 'B', 16)
         self.set_text_color(*C_PRIMARY)
-        self.cell(0, 12, title, new_x="LMARGIN", new_y="NEXT")
+        self.cell(0, 12, safe_text(title), new_x="LMARGIN", new_y="NEXT")
         self.set_draw_color(*C_PRIMARY)
         self.set_line_width(0.8)
         self.line(self.l_margin, self.get_y(), self.l_margin + 60, self.get_y())
@@ -82,14 +107,14 @@ class SEOReport(FPDF):
         """Add a subsection title."""
         self.set_font('Helvetica', 'B', 13)
         self.set_text_color(*C_DARK)
-        self.cell(0, 10, title, new_x="LMARGIN", new_y="NEXT")
+        self.cell(0, 10, safe_text(title), new_x="LMARGIN", new_y="NEXT")
         self.ln(2)
 
     def body_text(self, text: str):
         """Add body text."""
         self.set_font('Helvetica', '', 10)
         self.set_text_color(*C_DARK)
-        self.multi_cell(0, 5.5, text)
+        self.multi_cell(0, 5.5, safe_text(text))
         self.ln(3)
 
     def metric_callout(self, label: str, value: str, color=C_PRIMARY):
@@ -103,10 +128,10 @@ class SEOReport(FPDF):
         self.set_xy(x, y + 2)
         self.set_font('Helvetica', '', 8)
         self.set_text_color(*C_WHITE)
-        self.cell(w, 5, label, align='C', new_x="LMARGIN", new_y="NEXT")
+        self.cell(w, 5, safe_text(label), align='C', new_x="LMARGIN", new_y="NEXT")
         self.set_xy(x, y + 8)
         self.set_font('Helvetica', 'B', 13)
-        self.cell(w, 10, value, align='C')
+        self.cell(w, 10, safe_text(value), align='C')
         self.set_xy(x + w + 4, y)
         self.set_text_color(*C_DARK)
 
@@ -122,7 +147,7 @@ class SEOReport(FPDF):
         if caption:
             self.set_font('Helvetica', 'I', 8)
             self.set_text_color(*C_GRAY)
-            self.cell(0, 5, caption, align='C', new_x="LMARGIN", new_y="NEXT")
+            self.cell(0, 5, safe_text(caption), align='C', new_x="LMARGIN", new_y="NEXT")
             self.set_text_color(*C_DARK)
         self.ln(4)
 
@@ -137,7 +162,7 @@ class SEOReport(FPDF):
         self.set_fill_color(*C_PRIMARY)
         self.set_text_color(*C_WHITE)
         for i, header in enumerate(headers):
-            self.cell(col_widths[i], 8, str(header), border=1, fill=True, align='C')
+            self.cell(col_widths[i], 8, safe_text(str(header)), border=1, fill=True, align='C')
         self.ln()
 
         # Data rows
@@ -149,7 +174,7 @@ class SEOReport(FPDF):
             else:
                 self.set_fill_color(*C_WHITE)
             for i, cell in enumerate(row):
-                self.cell(col_widths[i], 7, str(cell), border=1, fill=True, align='C')
+                self.cell(col_widths[i], 7, safe_text(str(cell)), border=1, fill=True, align='C')
             self.ln()
         self.ln(4)
 
@@ -187,7 +212,7 @@ def build_cover_page(pdf: SEOReport, cfg: dict, summary: dict):
     dates = cfg["dates"]
     pdf.set_font('Helvetica', '', 12)
     pdf.set_text_color(*C_GRAY)
-    pdf.cell(0, 8, f'Analysis Period: {dates["before_start"]} – {dates["after_end"]}', align='C', new_x="LMARGIN", new_y="NEXT")
+    pdf.cell(0, 8, safe_text(f'Analysis Period: {dates["before_start"]} - {dates["after_end"]}'), align='C', new_x="LMARGIN", new_y="NEXT")
 
     # Author
     author = cfg.get("report", {}).get("author", "")
@@ -453,8 +478,8 @@ def build_methodology_page(pdf: SEOReport, cfg: dict, summary: dict):
 
     items = [
         ("Data Sources", "Google Search Console API, Google Analytics 4 Data API"),
-        ("Before Period", f'{dates["before_start"]} – {dates["before_end"]} ({gsc.get("days_before", "?")} days)'),
-        ("After Period", f'{dates["after_start"]} – {dates["after_end"]} ({gsc.get("days_after", "?")} days)'),
+        ("Before Period", f'{dates["before_start"]} - {dates["before_end"]} ({gsc.get("days_before", "?")} days)'),
+        ("After Period", f'{dates["after_start"]} - {dates["after_end"]} ({gsc.get("days_after", "?")} days)'),
         ("Normalization", "Per-day averages used when before/after periods differ in length"),
         ("GSC Data Lag", "Google Search Console data has approximately a 3-day lag"),
     ]
@@ -471,14 +496,14 @@ def build_methodology_page(pdf: SEOReport, cfg: dict, summary: dict):
 
     for label, value in items:
         pdf.set_font('Helvetica', 'B', 10)
-        pdf.cell(55, 7, label + ":")
+        pdf.cell(55, 7, safe_text(label + ":"))
         pdf.set_font('Helvetica', '', 10)
-        pdf.cell(0, 7, value, new_x="LMARGIN", new_y="NEXT")
+        pdf.cell(0, 7, safe_text(value), new_x="LMARGIN", new_y="NEXT")
 
     pdf.ln(10)
     pdf.set_font('Helvetica', 'I', 9)
     pdf.set_text_color(*C_GRAY)
-    pdf.multi_cell(0, 5, (
+    pdf.multi_cell(0, 5, safe_text(
         'Disclaimer: This report is generated from live API data. '
         'Metrics may differ slightly from the Google Search Console or GA4 web interfaces '
         'due to data processing delays, sampling, and rounding.'
