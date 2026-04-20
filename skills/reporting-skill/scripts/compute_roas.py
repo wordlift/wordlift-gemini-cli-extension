@@ -58,12 +58,83 @@ except ImportError:
 
 # ── Helpers ───────────────────────────────────────────────────────────────────
 
+def _find_header_row(path: Path, max_scan: int = 15) -> int:
+    """
+    Auto-detect the real header row in an Excel file.
+
+    Many Google Ads / campaign exports have merged cells, title rows,
+    or blank rows above the actual data.  We scan the first `max_scan`
+    rows and pick the one that:
+      1. Has the most non-empty cells, AND
+      2. Has mostly unique, non-"Unnamed" values (i.e. looks like headers).
+
+    Returns the 0-based row index to use as `header=` in pd.read_excel.
+    """
+    try:
+        # Read top rows without any header interpretation
+        raw = pd.read_excel(path, header=None, nrows=max_scan, dtype=str)
+    except Exception:
+        return 0  # fallback
+
+    best_row = 0
+    best_score = -1
+
+    for idx in range(len(raw)):
+        row = raw.iloc[idx]
+        values = [str(v).strip() for v in row if pd.notna(v) and str(v).strip()]
+        non_empty = len(values)
+        if non_empty == 0:
+            continue
+
+        # Penalise rows that look like data (mostly numeric)
+        numeric_count = sum(1 for v in values if _looks_numeric(v))
+        # Penalise rows with very few distinct values
+        unique_ratio = len(set(v.lower() for v in values)) / max(non_empty, 1)
+
+        # Score: many non-empty, mostly non-numeric, mostly unique
+        score = non_empty * (1 - numeric_count / max(non_empty, 1)) * unique_ratio
+        if score > best_score:
+            best_score = score
+            best_row = idx
+
+    return best_row
+
+
+def _looks_numeric(s: str) -> bool:
+    """Return True if the string looks like a number (possibly with $, commas)."""
+    cleaned = s.replace(",", "").replace("$", "").replace("%", "").replace(" ", "").strip()
+    if not cleaned:
+        return False
+    try:
+        float(cleaned)
+        return True
+    except ValueError:
+        return False
+
+
 def read_file(path: str) -> pd.DataFrame:
+    """Read CSV or Excel file with smart header detection for Excel."""
     p = Path(path)
     if not p.exists():
         raise FileNotFoundError(f"File not found: {path}")
     if p.suffix.lower() in (".xlsx", ".xls"):
-        return pd.read_excel(p, dtype=str)
+        header_row = _find_header_row(p)
+        df = pd.read_excel(p, header=header_row, dtype=str)
+        # Clean up any remaining "Unnamed:" columns (artifacts of merged cells)
+        unnamed_cols = [c for c in df.columns if str(c).startswith("Unnamed:")]
+        if unnamed_cols:
+            # If ALL columns are unnamed, the header detection failed — retry with row 0
+            named_cols = [c for c in df.columns if not str(c).startswith("Unnamed:")]
+            if not named_cols:
+                df = pd.read_excel(p, header=0, dtype=str)
+            else:
+                # Drop fully-empty unnamed columns
+                for uc in unnamed_cols:
+                    if df[uc].dropna().empty or df[uc].str.strip().eq("").all():
+                        df = df.drop(columns=[uc])
+        # Drop rows that are completely empty
+        df = df.dropna(how="all").reset_index(drop=True)
+        return df
     return pd.read_csv(p, dtype=str)
 
 
@@ -111,10 +182,20 @@ def inspect_schemas(campaign_path: str, groups_path: str,
             continue
         try:
             df = read_file(path)
+            # Provide clean column names + multiple sample rows for better mapping
+            sample_rows = []
+            for i in range(min(3, len(df))):
+                sample_rows.append(df.iloc[i].to_dict())
+
             result[label] = {
                 "columns": list(df.columns),
-                "sample_row": df.iloc[0].to_dict() if len(df) > 0 else {},
+                "sample_rows": sample_rows,
                 "row_count": len(df),
+                "auto_detected_header_row": (
+                    _find_header_row(Path(path))
+                    if Path(path).suffix.lower() in (".xlsx", ".xls")
+                    else 0
+                ),
             }
         except Exception as e:
             result[label] = {"error": str(e)}
@@ -224,9 +305,9 @@ def compute_roas_by_group(campaigns: pd.DataFrame, groups: dict[str, str]) -> di
 
 def causal_impact_did(roas_by_group: dict) -> dict:
     variant_keys = [k for k in roas_by_group
-                    if any(t in k.lower() for t in ("variant", "kg", "treat", "exposed"))]
+                    if any(t in k.lower() for t in ("variant", "kg", "treat", "exposed", "new"))]
     control_keys = [k for k in roas_by_group
-                    if any(t in k.lower() for t in ("control", "baseline", "untreated"))]
+                    if any(t in k.lower() for t in ("control", "baseline", "untreated", "old"))]
 
     if not variant_keys or not control_keys:
         all_keys = list(roas_by_group.keys())
