@@ -163,7 +163,28 @@ python3 scripts/google_ads_analysis.py --csv path/to/ads.csv --out ./output
 
 This generates `chart_ads_campaigns.png` and `ads_summary.json` which can be integrated into the final report or summarized by the agent.
 
-Produces `{site.name}_SEO_Report.pdf` in the output directory. Report structure follows [the template](assets/report_template.md). Sections are conditionally included based on available data.
+### Step 8: Deterministic ROAS Computation (Paid Campaigns)
+
+When analyzing Paid Campaigns for ROAS with a Variant/Control group mapping, use the deterministic `compute_roas.py` script. This requires a two-phase execution:
+
+**Phase 1 — Inspect the Schema**
+```bash
+python3 scripts/compute_roas.py --inspect-only \
+  --campaign <path_to_campaigns_file> \
+  --groups <path_to_groups_mapping_file>
+```
+Parse the JSON output and build a `--column-map` JSON mapping the standard keys (`cost`, `revenue`, `conversions`, `clicks`, `impressions`, `url`, `campaign_id`, `group_url`, `group_label`) to the actual column names based on the sample row provided.
+
+**Phase 2 — Deterministic Computation**
+```bash
+python3 scripts/compute_roas.py \
+  --campaign <path_to_campaigns_file> \
+  --groups <path_to_groups_mapping_file> \
+  --column-map '{"cost":"...", "revenue":"..."}'
+```
+**CRITICAL**: Parse the JSON (`COMPUTE_ROAS_RESULT_START` to `COMPUTE_ROAS_RESULT_END`). Use these computed numbers verbatim for your HTML report. Do not re-interpret or re-calculate the data yourself. Base64 chart PNGs are provided in the payload for direct embedding.
+
+Produces `{site.name}_SEO_Report.pdf` (or an HTML artifact if requested) in the output directory. Report structure follows [the template](assets/report_template.md). Sections are conditionally included based on available data.
 
 ## Configuration Reference
 
