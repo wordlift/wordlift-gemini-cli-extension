@@ -4,10 +4,9 @@ description: >
   Generate comprehensive SEO performance reports using Google Search Console (GSC)
   and Google Analytics 4 (GA4) data. Pulls live API data, computes before/after
   metrics, generates charts, runs optional CausalImpact analysis, and produces a
-  PDF report. Use when the user asks for SEO reporting, traffic analysis,
-  search performance analysis, GA4/GSC data pulls, or impact measurement for
-  website changes. Supports variant/control A/B comparisons, AI referral tracking,
-  schema class performance, and content intervention analysis.
+  PDF report. Also supports analyzing Google Ads / Paid Campaign CSV data for
+  comprehensive performance audits. Use when the user asks for SEO reporting,
+  traffic analysis, ads performance audits, or GA4/GSC data pulls.
 license: Apache-2.0
 compatibility: >
   Requires Python 3.9+, internet access for Google APIs, and a Google Cloud
@@ -153,6 +152,16 @@ Generates PNG charts and an `analysis_summary.json` with computed statistics. Ch
 ```bash
 python3 scripts/report.py --config config.yaml
 ```
+
+### Step 7: Analyze Google Ads (Optional)
+
+If the user provides a Google Ads campaign or keyword report as a CSV:
+
+```bash
+python3 scripts/google_ads_analysis.py --csv path/to/ads.csv --out ./output
+```
+
+This generates `chart_ads_campaigns.png` and `ads_summary.json` which can be integrated into the final report or summarized by the agent.
 
 Produces `{site.name}_SEO_Report.pdf` in the output directory. Report structure follows [the template](assets/report_template.md). Sections are conditionally included based on available data.
 
